@@ -1,0 +1,184 @@
+# @package _global_
+
+hydra:
+  run:
+    dir: .
+
+# Directories
+dir:
+  working: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2021/
+  data: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2021/dataset
+  local_data: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2021/local_data
+  plot: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2021/plot
+  ERAINT_DIR: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2021/local_data/era_interim
+  obs: /Users/ctang/climate/GLOBALDATA/OBSDATA/
+
+job:
+  data:
+  # used only in DATA
+    prepare_anomaly_pauline: 0
+    ssr_cluster_seasonal_series: 0
+    save_olr_files: 0
+    save_olr_ens_files: 0
+    save_ssr_files: 0
+    save_siod_2_nc: 0
+    save_enso_2_nc: 0
+    cal_clearsky_flux: 0
+    cal_cyclone_class: 0
+  ssr:
+    plot_topo_reu_in_sarah_e_grid: 0
+    statistics: 0
+    variability:
+      daily_energy: 0
+    classification:
+      plot_classification: 1
+      monthly_distribution: 0
+      field_in_class: 0
+    cyclone_property_ssr: 0
+  cyclone:
+    ssr_in_cyclone_day: 0   # final fig.
+    ssr_in_cyclone_day_welch_test: 0
+    ssr_in_cyclone_day_Permutation_test: 0
+      # the previous two tests are suggested by Benjamin, see details in
+      #    The background:
+      #
+      #    1, my OLR.pdf in /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2020
+      #    2, this doc in the same place
+    #    ================================== end of notes
+    cyclone_in_ssr_class: 0
+    plot_diurnal_cycle_curve_classif: 0
+  ttt:
+    olr_regime_statistics: 0
+    plot_ttt_regimes: 0
+    statistics: 0
+    ssr_olr_class_matrix: 0
+    temporal_correlation: 0
+    field_in_ttt:
+      large_scale: 0
+      local_scale: 0
+    diurnal_cycle:
+      plot_diurnal_cycle_boxplot: 0
+      plot_diurnal_cycle_map: 0
+      plot_diurnal_curve_in_class: 0
+    cyclone_in_ttt: 1
+    statistics_for_pv:
+      st_denis_only: 0
+      violin_plot: 0
+  mjo:
+    statistics: 0
+    plot_mjo_phase: 0
+    plot_field_in_mjo: 0
+    mjo_ssr_class_matrix: 0
+    cyclone_in_mjo: 0
+    diurnal_cycle:
+      plot_diurnal_cycle_map: 0
+      plot_diurnal_cycle_boxplot: 0
+      plot_diurnal_curve_in_class: 0
+    ttt_vs_mjo:
+      compare_ssr_in_ttt_mjo_class: 0
+      plot_mjo_olr_matrix_maps: 1
+    ttt_vs_mjo_matrix: 1
+  pv_statistics:
+    clearsky_analysis: 0
+  interannual_variability:
+    loading: 1
+    clearsky_data: 0
+    percentile: [0.1, 0.1, 0.05]  # for Enso, SIOD, IOD
+    statistics: 1
+    loop:
+      plot_monthly_index: 1
+      calculate_daily_index_df: 1
+      plot_field_in_classif: 1
+      violin_clearsky_in_classif: 0  # classif is needed
+      two_sample_test: 0
+      solar_energy: 1
+  figure:
+    figure_1: 1
+
+
+
+param:
+  cal_cyclone_class_in_ssr_period:
+    find_day_with_more_than_one_cyclone: 0
+    nearby_radius: 5
+  mjo_season: 'austral_summer'
+  cyclone_season: 'NDJFM'
+  cyclone_radius: 3
+  # we take the 3 degree threshold since
+  # the size of cyclone systems is about 300 – 400 km
+  # (Radius of the Outermost Closed Isobar, Leroux et al., 2018).
+  plot_big_data_test: 0
+  # to reduce the data size for test the plot and analysis
+  remove_uncertain_days: 0
+#  ttt_classif: 'robust'   # dominant, and remove days with ensemble convergence < 8
+  ttt_classif: 'dominant' # all the days with dominant class, while plot is based on 1st ens number
+#  ttt_classif: '1st_ens_num'  # all the days from 1st ens number
+#  ttt_classif: 'not_robust'   # not robust days
+  ttt_1st_ens_class: 1
+  sarah_e_start_year: 1999
+  sarah_e_end_year: 2016
+
+input:
+  ssr_clusters: ./dataset/classifications__2_to_20_Cl.csv
+
+  daymean_nearby_tc_sis_5: f'./dataset/reu_nearby_5.tc.daymean_pauline_anomaly_sis.csv'
+  daymean_nearby_tc_sis_3: f'./dataset/reu_nearby_3.tc.daymean_pauline_anomaly_sis.csv'
+
+  ssr_clearsky_era5_pauline: ./dataset/ssrdc.era5.1999-2016.local_daytime.reu.remap.nc
+  ssr_clearsky_era5_raw: ./dataset/ssrdc.era5.1999-2016.local_daytime.reu.nc
+  cal_sarah_2_pauline: ./dataset/cal_sarah_2_99-16.format_pauline.localtime.nc
+  land_mask_pauline: ./dataset/sarah_e.land_mask.format_pauline.mat
+  ssr_daily_anomaly_pauline: ./dataset/ssr_day_anomaly_daytime.format_pauline.nc
+  ssr_clearsky_pauline: ./dataset/clearsky_hourly_daytime.format_pauline.nc
+  ssr_anomaly_pauline: ./dataset/ssr_hour_anomaly_pauline.nc
+  ssr_raw_pauline: ./dataset/ssr_hour_raw_format_pauline.nc
+  cfc_cmsaf_pauline: ./dataset/cfc_cmsaf_99-15.format_pauline.nc
+
+  tc_raw: ./dataset/cyclones.csv
+  tc_6h: ./dataset/cyc_df.csv
+  tc_day: ./dataset/cyc_day.csv
+
+  ttt_Ben_class_file: ./dataset/PROJCLASS_TTT_ERA5.mat
+  clearsky: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2020/dataset/ssr_clearsky_hourly.sarah_e.reso.nc
+  # data reference is in paper of Marie-Dominique MF 2018
+  ssr_era5: ~/local_data/era5/rsds.era5.1999-2016.day.swio.nc
+  ttt_class_file_old: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Mialhe_2020/dataset/TTT/ERA5_PROJCLASS_OLR.mat
+  ttr_ens_file: ~/local_data/era5/Mialhe_2021/ens_ttr/ttr_18h_ens_1.1979-2018.nc
+  olr_ens_swio: ./local_data/olr_ens_swio.nc
+  olr_day_swio: ./local_data/olr_1999-2016.day.swio.nc
+  ttr_era5: ~/local_data/era5/ttr/ttr.era5.1999-2016.day.reu.nc
+  ssr_sarah_e_hour_reu: /Users/ctang/local_data/sarah_e/SIS.sarah-e.1999-2016.hour.reu.nc
+  cfc_cmsaf: ~/local_data/cmsaf/CFC.hourly.cmsaf.1999-2015.bigreu.local_daytime.nc
+  cal_sarah_e: ./dataset/cal.hour.1999-2016.hour.localtime.pauline.format.nc
+
+  iod: 'dmi.nc'
+  siod_raw: 'siod.csv'
+  siod: 'siod.nc'
+  enso_raw: 'meiv2.data.txt'
+  enso: 'enso.nc'
+
+
+HUB_HEIGHT: 100
+
+plot:
+  output_param: 0
+  wind_change_min: -2
+  wind_change_max: 2
+  cyclone_class: 'cyclone_class.csv'
+
+output:
+  ttt_class_monthly: 'ttt_class_at_year_month.png'
+  mjo_class_monthly: 'mjo_class_at_year_month.png'
+  # file and temp file
+  ssr_clearsky_flux_hour_reu: './dataset/ssr_clearsky_hourly.sarah_e_temp.nc'
+  ssr_total_sky_hour_reu: './dataset/ssr_total_sky_hour_reu.temp.nc'
+  ssr_total_sky_hour_reu_anomaly: './dataset/ssr_total_sky_hour_anomaly.reu.temp.nc'
+  ssr_total_sky_day_reu: './dataset/ssr_total_sky_day_reu.temp.nc'
+  ssr_total_sky_day_reu_anomaly: './dataset/ssr_total_sky_day_anomaly.reu.temp.nc'
+
+
+
+
+
+
+

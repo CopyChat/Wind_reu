@@ -17,10 +17,7 @@ import xarray as xr
 from importlib import reload
 from omegaconf import DictConfig
 import GEO_PLOT
-import MIALHE_2021
 import DATA
-
-import Final_Figure
 
 
 def jk():
