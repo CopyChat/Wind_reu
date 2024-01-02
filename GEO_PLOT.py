@@ -363,7 +363,7 @@ def query_data(mysql_query: str, remove_missing_data=True):
     return df
 
 
-@hydra.main(config_path="configs", config_name="config.ctang")
+@hydra.main(version_base='1.3', config_path="configs", config_name="config.ctang")
 def query_influxdb(cfg: DictConfig, query: str):
     """
     select data from DataBase
@@ -8191,8 +8191,8 @@ def plot_topo_reunion_high_reso(plot: bool = True, grid: xr.DataArray = None,
     # from NASA Jet Propulsion Laboratory
     # attention: if dpi=300, it takes 1 hour to plot. use dpi=220, then 1 minute
 
-    file1 = f'~/local_data/topo/ASTGTMV003_S21E055_dem.nc'
-    file2 = f'~/local_data/topo/ASTGTMV003_S22E055_dem.nc'
+    file1 = f'~/local_data/topo/reu/ASTGTMV003_S21E055_dem.nc'
+    file2 = f'~/local_data/topo/reu/ASTGTMV003_S22E055_dem.nc'
 
     ref1 = read_to_standard_da(file1, 'ASTER_GDEM_DEM')
     ref2 = read_to_standard_da(file2, 'ASTER_GDEM_DEM')
