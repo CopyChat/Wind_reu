@@ -4459,8 +4459,8 @@ def plot_diurnal_cycle_columns_in_df(df: pd.DataFrame, columns=None,
         if with_marker:
             if plot_errorbar:
                 plt.errorbar(x, y, yerr=y_err, marker=markers[i], color=colors[i],
-                         capsize=capsize, capthick=1,  # error bar format.
-                         label=f'{column:s}', linestyle=linestyle)
+                             capsize=capsize, capthick=1,  # error bar format.
+                             label=f'{column:s}', linestyle=linestyle)
             else:
                 # without errorbar:
                 plt.plot(x, y, marker=markers[i], color=colors[i], label=f'{column:s}', linestyle=linestyle)
@@ -8054,7 +8054,7 @@ def plot_topo_mauritius_high_reso(plot: bool = True, grid: xr.DataArray = None,
 
     cbar_label = f'elevation (meter)'
     cb.set_label(label=cbar_label, size=14)
-    
+
     if plot_max:
         marker = '^'
         top = geomap.where(geomap == geomap.max(), drop=True)
@@ -8089,9 +8089,9 @@ def plot_topo_mauritius_high_reso(plot: bool = True, grid: xr.DataArray = None,
 
 
 def plot_topo_mauritius_high_reso(plot: bool = True, grid: xr.DataArray = None,
-                                plot_max: bool = True,
-                                add_point: list = None,
-                                vmax=100, output_tag: str = ''):
+                                  plot_max: bool = True,
+                                  add_point: list = None,
+                                  vmax=100, output_tag: str = ''):
     # The map is based on the ASTER Global Digital Elevation Model
     # from NASA Jet Propulsion Laboratory
     # attention: if dpi=300, it takes 1 hour to plot. use dpi=220, then 1 minute
@@ -8179,6 +8179,68 @@ def plot_topo_mauritius_high_reso(plot: bool = True, grid: xr.DataArray = None,
     plt.show()
 
     print(f'done')
+
+
+def load_reunion_coastline():
+    csv = '~/local_data/topo/reu/coastline.csv'
+    return read_csv_into_df_with_header(csv)
+
+def get_coastline_from_topo_reu(plot: bool = True, csv:str ='~/local_data/topo/reu/coastline_reu.csv'):
+    from scipy.ndimage import generic_filter
+
+    # get topo into DataArray:
+
+    file1 = f'~/local_data/topo/reu/ASTGTMV003_S21E055_dem.nc'
+    file2 = f'~/local_data/topo/reu/ASTGTMV003_S22E055_dem.nc'
+
+    ref1 = read_to_standard_da(file1, 'ASTER_GDEM_DEM')
+    ref2 = read_to_standard_da(file2, 'ASTER_GDEM_DEM')
+
+    ref = xr.concat([ref1, ref2[1:, :]], dim='y')
+    ref = ref.rename({'x': 'lon', 'y': 'lat'})
+
+    land = ref.where(ref != 0)
+
+    geomap = land
+
+    # a func of filter
+    def find_pixels_with_nan_and_positive_neighbours(data_array):
+        def condition(arr):
+            return np.isnan(arr).any() and (arr > 0).any()
+
+        # Apply the condition to each pixel using a 3x3 neighborhood
+        mask = generic_filter(data_array, condition, size=(3, 3), mode='constant', cval=np.nan)
+
+        return xr.DataArray(mask, coords=data_array.coords, dims=data_array.dims)
+
+    coastline_pixels = find_pixels_with_nan_and_positive_neighbours(geomap)
+
+    def get_lon_lat_pairs_with_value(data_array, value=1):
+        # Find indices where the pixel value is equal to the specified value
+        indices = np.argwhere(data_array.values == value)
+
+        # Extract lon and lat coordinates based on the indices
+        lon_values = data_array.lon.values[indices[:, 1]]
+        lat_values = data_array.lat.values[indices[:, 0]]
+
+        # Create a list of (lon, lat) pairs
+        lon_lat_pairs = list(zip(lon_values, lat_values))
+
+        return np.array(lon_lat_pairs)
+        # ----
+
+    coastline = get_lon_lat_pairs_with_value(coastline_pixels, value=1)
+
+    df = pd.DataFrame(coastline)  # A is a numpy 2d array
+    C = ['longitude', 'latitude']
+    df.to_csv(csv, header=C, index=False)  # C is
+
+    if plot:
+        fig = plt.figure(figsize=(8, 8), dpi=220)
+        plt.scatter(coastline[:, 0], coastline[:, 1], marker='o', s=1, c='k', edgecolor='k')
+        plt.show()
+
+    return df
 
 
 def plot_topo_reunion_high_reso(plot: bool = True, grid: xr.DataArray = None,
@@ -8297,8 +8359,8 @@ def plot_topo_reunion_high_reso(plot: bool = True, grid: xr.DataArray = None,
         # taking every 4th point in x and y). The quiver_kwargs are parameters to control the
         # appearance of the quiver so that they stay consistent between the calls.
 
-        u_1 = u[0,:,:]
-        v_1 = v[0,:,:]
+        u_1 = u[0, :, :]
+        v_1 = v[0, :, :]
 
         plot_wind_subplot(area='bigreu',
                           lon=u_1.lon, lat=v_1.lat,
