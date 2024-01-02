@@ -8182,8 +8182,8 @@ def plot_topo_mauritius_high_reso(plot: bool = True, grid: xr.DataArray = None,
 
 
 def load_reunion_coastline():
-    csv = '~/local_data/topo/reu/coastline.csv'
-    return read_csv_into_df_with_header(csv)
+    csv = '~/local_data/topo/reu/coastline_reu.csv'
+    return pd.read_csv(csv)
 
 def get_coastline_from_topo_reu(plot: bool = True, csv:str ='~/local_data/topo/reu/coastline_reu.csv'):
     from scipy.ndimage import generic_filter
