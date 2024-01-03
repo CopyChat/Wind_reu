@@ -6,3 +6,4 @@
 /.hydra/config.yaml
 /local_data/MF/ff.dd.hourly.mf.2000-2020.csv
 /local_data/MF/mf.station.csv
+/.idea/sqldialects.xml
