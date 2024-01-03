@@ -11,7 +11,6 @@ import scipy
 import sys
 from pathlib import Path
 from typing import List
-from importlib import reload
 import warnings
 import hydra
 import seaborn as sns
@@ -27,7 +26,6 @@ import cartopy.crs as ccrs
 
 # to have the right backend for the font.
 import matplotlib.pyplot as plt
-import matplotlib.figure as figure
 
 import cartopy.feature as cfeature
 from scipy import stats
@@ -825,7 +823,7 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
                   f' ({start:s} - {end:s})\n'
                   f'{output_plot_tag:s}')
 
-        ax = plt.gca();
+        ax = plt.gca()
         # -----------
         # put the major ticks at the middle of each cell
         x_ticks = np.arange(24)
@@ -1955,10 +1953,16 @@ def plot_surface_circulation_diurnal_cycle_classif(axs, classif: pd.DataFrame, f
     """
     add circulation in subplot: 1) wind, 2) moisture flux by a) mean or b) anomaly
     Args:
-        ax:
-        type:
+        axs:
+        circulation_name:
+        area:
+        test:
+
 
     Returns:
+    :param circulation_name:
+    :param moisture_flux:
+
 
     """
     print(f'plot surface circulation ...')
@@ -2071,7 +2075,6 @@ def plot_diurnal_cycle_field_in_classif(classif: pd.DataFrame,
     Args:
         plt_type:
         plot_moisture_flux:  plot surface field flux instead of only wind, or wind anomaly (controled by wind_anomaly)
-        field_flux_data: such as specific humidity to plot moisture flux
         circulation_name:
         str_class_names:  class may have a name, otherwise use the value in column 'class' in the DataFrame
         circulation_anomaly:  if plot anomaly of surface wind
@@ -2296,6 +2299,7 @@ def plot_wind_subplot(area: str, lon: xr.DataArray, lat: xr.DataArray,
                             # to get what you want now
                             color='green', zorder=2, **quiver_kwargs)
 
+    print(n_scale)
     ax.quiverkey(circulation, 0.18, -0.1, key, f'{key:g} ' + key_units,
                  labelpos='E',
                  color='k', labelcolor='k', coordinates='axes')
@@ -4207,8 +4211,6 @@ def plot_annual_diurnal_cycle_columns_in_df(df: pd.DataFrame, columns=None,
                                             vmin=None, vmax=None):
     """
     applied project LW_XGBoost_Cloud, Final figure
-    :param months:
-    :param suptitle:
     :param df:
     :param columns:
     :return:
@@ -4501,8 +4503,6 @@ def plot_annual_cycle_columns_in_df(df: pd.DataFrame, columns=None,
                                     vmin=None, vmax=None):
     """
     applied project Sky_clearness_2023:
-    :param months:
-    :param suptitle:
     :param df:
     :param columns:
     :return:
@@ -4605,7 +4605,6 @@ def plot_monthly_diurnal_single_fig_df(df: pd.DataFrame, column=None, suptitle='
     :param months:
     :param suptitle:
     :param df:
-    :param columns:
     :return:
     """
 
