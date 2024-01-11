@@ -786,6 +786,7 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
     # U, us microseconds
     # N nanoseconds
 
+    print(f'start working ...')
     total_time_steps = pd.date_range(start, end, freq=freq)
 
     missing_num = len(total_time_steps) - len(data)
@@ -2479,7 +2480,6 @@ def plot_field_in_classif(field: xr.DataArray, classif: pd.DataFrame,
 
 def plot_voronoi_diagram_reu(points: np.ndarray, fill_color, out_fig: str):
 
-
     from matplotlib.collections import PolyCollection
     from scipy.spatial import Voronoi, voronoi_plot_2d
 
@@ -2861,8 +2861,9 @@ def check_missing_df_da_interval(df, vmin=None, vmax=None, output_tag='', freq='
             df = df[df >= vmin]
             df = df.dropna()
 
-            check_missing_da_df(start=str(df.index.date[0]), end=str(df.index.date[-1]),
-                                freq=freq, data=df, output_plot_tag=output_tag + col)
+        matrix = check_missing_da_df(start=str(df.index.date[0]), end=str(df.index.date[-1]),
+                                     freq=freq, data=df, output_plot_tag=f'{output_tag:s}_{col:s}')
+    return matrix
 
 
 def plot_power_spectral_density_multi_columns_df(df: pd.DataFrame, columns: list = ['', ], title='',
