@@ -7,22 +7,23 @@ hydra:
 # Directories
 dir:
   working: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu
-  data: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/dataset
-  local_data: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/local_data
-  plot: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot
+  data: ./dataset
+  plot: ./plot
   obs: /Users/ctang/climate/GLOBALDATA/OBSDATA/
 
 data:
-  mf: 'mf.csv'
-  mf_station: 'mf.station.csv'
+  mf_station: './local_data/MF/mf.station.csv'
+  mf_all: './local_data/MF/ff.dd.hourly.mf.2000-2020.csv'
 
 job:
-  data: 0
+  missing_MF: 1
   # used only in DATA
   voronoi: 1
 
 figure:
-    reunion_voronoi_mf: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/voronoi_reu_mf.png
+    reunion_voronoi_mf_alt: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/voronoi_reu_mf_alt.png
+    reunion_voronoi_mf_speed: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/voronoi_reu_mf_speed.png
+    reunion_missing_mf: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/missing_mf
 
 param:
   sarah_e_end_year: 2016
