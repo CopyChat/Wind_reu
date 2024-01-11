@@ -71,67 +71,11 @@ def wind_resource(cfg: DictConfig) -> None:
 
             alt = np.array(station['ALT'])
 
+            voronoi_fig = GEO_PLOT.plot_voronoi_diagram_reu(points=coords[:],
+                                                            fill_color=alt, out_fig=cfg.figure.reunion_voronoi_mf)
+
             # plot voronoi:
 
-            from matplotlib.collections import PolyCollection
-            from scipy.spatial import Voronoi, voronoi_plot_2d
-            vor = Voronoi(coords)
-
-            # ---------------------------------------
-            # Plot Voronoi diagram with filled color
-            def voronoi_finite(vor):
-                """
-                Reconstruct infinite Voronoi regions in a finite space.
-
-                Parameters:
-                vor : scipy.spatial.Voronoi
-                    Voronoi diagram object.
-
-                Returns:
-                regions : list of list of tuple
-                    List of finite Voronoi regions.
-                vertices : array
-                    Voronoi diagram vertices.
-                """
-                new_regions = []
-                for region in vor.regions:
-                    if -1 not in region and len(region) > 0:
-                        new_regions.append([(vor.vertices[i, 0], vor.vertices[i, 1]) for i in region])
-                return new_regions, vor.vertices
-
-            fig, ax = plt.subplots(figsize=(10, 8))
-
-            # plot filled color:
-            regions, vertices = voronoi_finite(vor)
-            polygons = PolyCollection(regions, edgecolor='black', cmap='viridis')
-            polygons.set_array(alt)
-            ax.add_collection(polygons)
-
-            # plot lines and points:
-            voronoi_plot_2d(vor, ax=ax, show_vertices=False, line_colors='orange',
-                            line_width=2, line_alpha=0.6, point_size=8,
-                            figsize=(8, 8), dpi=220)
-
-            # Customize the colorbar
-            cbar = plt.colorbar(polygons, ax=ax)
-            cbar.set_label('Altitude (meter)')
-
-            # add axis labels:
-            plt.xlabel('Longitude ($^\circ$E)', fontsize=12)
-            plt.ylabel('Latitude ($^\circ$N)', fontsize=12)
-
-            # Customize the plot as needed
-            ax.set_xlim(vor.min_bound[0]-0.05, vor.max_bound[0]+0.05)
-            ax.set_ylim(vor.min_bound[1]-0.05, vor.max_bound[1]+0.05)
-            ax.set_aspect('equal', adjustable='box')
-            ax.set_title('Voronoi Diagram with MF stations with ALT in color')
-
-            # add coastline:
-            coastline = GEO_PLOT.load_reunion_coastline()
-            plt.scatter(coastline.longitude, coastline.latitude, marker='o', s=1, c='gray', edgecolor='gray', alpha=0.6)
-            plt.savefig(cfg.figure.reunion_voronoi_mf, dpi=300, bbox_inches='tight')
-            plt.show()
-            # =====
 
         print('working')
 
