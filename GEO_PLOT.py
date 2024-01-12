@@ -8536,7 +8536,6 @@ def value_clearsky_radiation(
         model: str = 'climatology',
         show: bool = 1):
     import pvlib
-    from pvlib import clearsky, atmosphere, solarposition
     from pvlib.location import Location
 
     # ----------------------------- definition -----------------------------
