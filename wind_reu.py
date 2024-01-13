@@ -7,18 +7,11 @@ __author__ = "ChaoTANG@univ-reunion.fr"
 
 import sys
 import hydra
-import matplotlib
 import numpy as np
-import pickle
-import scipy
-import matplotlib.pyplot as plt
 import pandas as pd
-import xarray as xr
 from importlib import reload
 from omegaconf import DictConfig
-# import geopandas as gpd
 import GEO_PLOT
-import DATA
 
 
 def jk():
@@ -48,28 +41,26 @@ def wind_resource(cfg: DictConfig) -> None:
             coords = np.array(station[['LON', 'LAT']])
 
             alt = np.array(station['ALT'])
-            GEO_PLOT.plot_voronoi_diagram_reu(points=coords[:], fill_color=alt,
-                                              out_fig=cfg.figure.reunion_voronoi_mf_alt)
+            GEO_PLOT.plot_voronoi_diagram_reu(
+                points=coords[:], fill_color=alt, out_fig=cfg.figure.reunion_voronoi_mf_alt)
 
             # get mean of all hourly data
             hourly_mean = mf.groupby('NOM').mean()
 
             speed = hourly_mean['FF']
-            GEO_PLOT.plot_voronoi_diagram_reu(points=coords[:], fill_color=speed,
-                                              out_fig=cfg.figure.reunion_voronoi_mf_speed)
+            GEO_PLOT.plot_voronoi_diagram_reu(
+                points=coords[:], fill_color=speed, out_fig=cfg.figure.reunion_voronoi_mf_speed)
 
-            
         if cfg.job.missing_MF:
             print('working on MF missing data')
 
             for sta in station['NOM']:
                 print(f'{sta:s}')
-                sta1 = mf[mf['NOM']==sta]
-                print(len(sta1))
-                GEO_PLOT.check_missing_df_da_interval(
-                    sta1, vmin=None, vmax=None, output_tag=sta, freq='H', columns=['FF',])
+                sta1 = pd.DataFrame(mf[mf['NOM']==sta]['FF'])
+                GEO_PLOT.check_missing_da_df(
+                    start='2000-01-01 00:00', end='2020-12-31 23:00',freq='H',
+                    data=sta1, plot=True, relative=True, output_plot_tag=f'MF station_{sta:s}')
 
-                GEO_PLOT.plot_missing_data(sta1, out_fig=f'{cfg.figure.reunion_missing_mf:s}_{sta:s}.png')
 
 
 

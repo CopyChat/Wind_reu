@@ -754,13 +754,14 @@ def get_month_name_from_num(num):
 
 
 def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plot: bool = True,
-                        output_plot_tag=None, show_fig=True):
+                        output_plot_tag=None, show_fig=True, relative=False):
     """
     applied project Sky_clearness_2023:
     to find the missing data number in months and in hours
     :param start:
     :param end:
     :param freq:
+    :param relative: plot/calculate in percentage
     :param data:
     :param plot:
     :return:
@@ -786,13 +787,26 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
     # U, us microseconds
     # N nanoseconds
 
-    print(f'start working ...')
-    total_time_steps = pd.date_range(start, end, freq=freq)
+    data = drop_nan_infinity(data)
 
-    missing_num = len(total_time_steps) - len(data)
+    print(f'start working ...')
+
+    total_time_steps = pd.date_range(start, end, freq=freq)
+    total_number = len(total_time_steps)
+
+    missing_num = total_number - len(data)
+
     print(f'there are {missing_num:g} missing values..')
 
+    # number to calculate
     matrix_mon_hour = np.zeros((12, 24))
+
+    monthly_missing_num = np.zeros((12,))
+    monthly_total_num = np.zeros((12,))
+
+    hourly_missing_num = np.zeros((24,))
+    hourly_total_num = np.zeros((24,))
+
     if missing_num:
         # find the missing values:
         A = total_time_steps.strftime('%Y-%m-%d %H:%M')
@@ -801,31 +815,61 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
         if isinstance(data, pd.DataFrame):
             B = data.index.strftime('%Y-%m-%d %H:%M')
         C = [i for i in A if i not in B]
+        # Note: here, if error raised as B referenced before definition, then
+        # the input is either pd.DataFrame or xr.DataArray.
 
         missing_datetime = pd.to_datetime(C)
+        all_datetime = pd.to_datetime(A)
+
         for i in range(1, 13):
-            monthly = missing_datetime[missing_datetime.month == i]
+
+            miss_monthly = missing_datetime[missing_datetime.month == i]
+            all_monthly = all_datetime[all_datetime.month == i]
+
+            monthly_missing_num[i-1] = len(miss_monthly)
+            monthly_total_num[i-1] = len(all_monthly)
+
             for h in range(0, 24):
-                missing_hours = list(monthly.groupby(monthly.hour).keys())
+                missing_hours = list(miss_monthly.groupby(miss_monthly.hour).keys())
 
                 if h in missing_hours:
-                    matrix_mon_hour[i - 1, h] = monthly.groupby(monthly.hour)[h].size
+                    if relative:
+                        matrix_mon_hour[i - 1, h] = miss_monthly.groupby(miss_monthly.hour)[h].size *100 \
+                                                    / all_monthly.groupby(all_monthly.hour)[h].size
+                    else:
+                        matrix_mon_hour[i - 1, h] = miss_monthly.groupby(miss_monthly.hour)[h].size
+
+        # to calculate the missing hours in all months/years:
+        for i in range(24):
+            miss_hourly = missing_datetime[missing_datetime.hour == i]
+            all_hourly = all_datetime[all_datetime.hour == i]
+
+            hourly_missing_num[i] = len(miss_hourly)
+            hourly_total_num[i] = len(all_hourly)
 
     if plot:
-        fig = plt.figure(figsize=(8, 5), dpi=300)
+        fig = plt.figure(figsize=(10, 6), dpi=300)
         im = plt.imshow(matrix_mon_hour, cmap="OrRd")
-        plt.colorbar(im, orientation='horizontal', shrink=0.8, pad=0.2,
-                     label='num of missing values')
 
-        plt.xlabel('hour')
-        plt.ylabel('month')
+        if relative:
+            cb_label = 'percentage of missing hours (%)'
+            x_label = f'% of missing hours (total = {hourly_total_num.mean():g})'
+        else:
+            cb_label = 'number of missing hours'
+            x_label = f'number of missing hours (total = {hourly_total_num.mean():g})'
+
+        cb = plt.colorbar(im, orientation='horizontal', shrink=0.5, pad=0.1, label=cb_label)
+
+        plt.ylabel('Month')
+        plt.xlabel(x_label, labelpad=19) # labelpad: distance to plot
 
         plt.title(f'missing data @{freq:s}'
-                  f' ({start:s} - {end:s})\n'
-                  f'{output_plot_tag:s}')
+                  f' ({start:s} - {end:s}) '
+                  f'{output_plot_tag:s}\n'
+                  f'Hour')
 
         ax = plt.gca()
-        # -----------
+        # ----------- set the top left labels
         # put the major ticks at the middle of each cell
         x_ticks = np.arange(24)
         y_ticks = np.arange(12)
@@ -834,6 +878,7 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
         y_ticks_label = np.arange(12) + 1
         y_ticks_label = [get_month_name_from_num(x) for x in y_ticks_label]
 
+        ax.xaxis.tick_top()
         # Major ticks
         ax.set_xticks(x_ticks)
         ax.set_yticks(y_ticks)
@@ -841,11 +886,40 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
         ax.set_xticklabels(x_ticks_label)
         ax.set_yticklabels(y_ticks_label)
 
-        # add grid: # Minor ticks first
+        # Minor ticks
         ax.set_xticks(np.arange(-.5, 24, 1), minor=True)
         ax.set_yticks(np.arange(-.5, 12, 1), minor=True)
+
         # Gridlines based on minor ticks
         ax.grid(which='minor', color='gray', linestyle='-', linewidth=0.5)
+
+        # ----------- set the right bottom labels
+        # put the monthly/hourly sum on the right
+        if relative:
+            monthly_percent = monthly_missing_num * 100 / monthly_total_num
+            mon_ticks_label = [f'{y_ticks_label[i]:s} {monthly_percent[i]:2.1f}% of {monthly_total_num[i]:g}' for i in range(12)]
+
+            hourly_percent = hourly_missing_num * 100 / hourly_total_num
+            hour_ticks_label = [f'{hourly_percent[i]:2.1f}' for i in range(24)]
+        else:
+            mon_ticks_label = [f'{y_ticks_label[i]:s} {monthly_missing_num[i]:g} ({monthly_total_num[i]:g})' for i in range(12)]
+            hour_ticks_label = [ f'{hourly_missing_num[i]:g}' for i in range(24)]
+
+        # Set the x-axis ticks on the bottom side
+        ax_bottom = ax.secondary_xaxis("bottom")
+        ax_bottom.set_xticks(x_ticks)
+        ax_bottom.set_xticks(np.arange(-.5, 24, 1), minor=True)
+        ax_bottom.set_xticklabels(hour_ticks_label, rotation=0, fontsize=8)
+
+        # Set the y-axis ticks on the right side
+        ax_right = ax.secondary_yaxis("right")
+        ax_right.yaxis.tick_right()
+        ax_right.set_yticks(y_ticks)
+        ax_right.set_yticklabels(mon_ticks_label)
+        ax_right.set_yticks(np.arange(-.5, 12, 1), minor=True)
+        # -----------
+        # adjust the y-axis ticks to the border of plot.
+        plt.subplots_adjust(left=0.06)
 
         if output_plot_tag is not None:
             plt.savefig(f'./plot/missing.{output_plot_tag:s}.png', dpi=300)
@@ -2478,7 +2552,7 @@ def plot_field_in_classif(field: xr.DataArray, classif: pd.DataFrame,
     plt.show()
     print(f'got plot')
 
-def plot_voronoi_diagram_reu(points: np.ndarray, fill_color, out_fig: str):
+def plot_voronoi_diagram_reu(points: np.ndarray, fill_color: object, out_fig: str) -> object:
 
     from matplotlib.collections import PolyCollection
     from scipy.spatial import Voronoi, voronoi_plot_2d
