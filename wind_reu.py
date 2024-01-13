@@ -62,7 +62,11 @@ def wind_resource(cfg: DictConfig) -> None:
         for sta in station['NOM']:
             print(f'{sta:s}')
             sta1 = pd.DataFrame(mf[mf['NOM']==sta]['FF'])
-            print(len(sta))
+            print(len(sta1))
+            GEO_PLOT.plot_annual_diurnal_cycle_columns_in_df(
+                df=sta1, columns=['FF',], title=f'{sta:s} wind speed 2000-2022', tag_on_plot=f'{sta:s}',
+                linestyles=None, output_tag=f'{sta:s}', ylabel=f'hourly wind speed', with_marker=True,
+                plot_errorbar=True, vmin=0, vmax=10)
 
 
 

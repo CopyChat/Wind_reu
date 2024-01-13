@@ -4354,6 +4354,7 @@ def plot_annual_diurnal_cycle_columns_in_df(df: pd.DataFrame, columns=None,
                                             title=' ',
                                             linestyles=None,
                                             output_tag='',
+                                            tag_on_plot='',
                                             count_bar_plot=True,
                                             colors=None, markers=None,
                                             ylabel='',
@@ -4455,6 +4456,10 @@ def plot_annual_diurnal_cycle_columns_in_df(df: pd.DataFrame, columns=None,
         plt.xlabel(f'Hour', fontsize=fontsize)
         plt.ylabel(ylabel, fontsize=fontsize)
 
+        # plot tag_on_plot:
+        ax.text(0.1, 0.95, f'{tag_on_plot:s}', fontsize=14,
+                horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
+
         if len(columns) == 1:
             plt.ylim(vmin, vmax)
 
@@ -4520,6 +4525,10 @@ def plot_annual_diurnal_cycle_columns_in_df(df: pd.DataFrame, columns=None,
         plt.legend(fontsize=fontsize)
         plt.xlabel(f'Month', fontsize=fontsize)
         plt.ylabel(ylabel, fontsize=fontsize)
+
+        # plot tag_on_plot:
+        ax.text(0.1, 0.95, f'{tag_on_plot:s}', fontsize=14,
+                horizontalalignment='left', verticalalignment='top', transform=ax.transAxes)
 
     if count_bar_plot:
         num_plot += 1
