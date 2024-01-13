@@ -2552,7 +2552,8 @@ def plot_field_in_classif(field: xr.DataArray, classif: pd.DataFrame,
     plt.show()
     print(f'got plot')
 
-def plot_voronoi_diagram_reu(points: np.ndarray, fill_color: object, out_fig: str) -> object:
+def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str, fill_color=None,
+                             fill_color_name:str='') -> object:
 
     from matplotlib.collections import PolyCollection
     from scipy.spatial import Voronoi, voronoi_plot_2d
@@ -2586,23 +2587,41 @@ def plot_voronoi_diagram_reu(points: np.ndarray, fill_color: object, out_fig: st
         return new_regions, vor.vertices
 
     # ---------------------------------------
-    # Plot Voronoi diagram with filled color
 
     fig, ax = plt.subplots(figsize=(10, 8))
 
-    regions, vertices = voronoi_finite(vor)
-    polygons = PolyCollection(regions, edgecolor='black', cmap='viridis')
-    polygons.set_array(fill_color)
-    ax.add_collection(polygons)
+    title = 'Voronoi Diagram with MF stations'
+    # Plot Voronoi diagram with filled color
+
+    if fill_color is not None:
+
+        regions, vertices = voronoi_finite(vor)
+        polygons = PolyCollection(regions, edgecolor='black', cmap='viridis')
+        polygons.set_array(fill_color)
+        ax.add_collection(polygons)
+
+        # Customize the colorbar
+        cbar = plt.colorbar(polygons, ax=ax)
+        cbar.set_label(fill_color_name)
+
+        title = f'{title:s} {fill_color_name:s}'
+
+    else:
+        out_fig = f'{out_fig[:-4]:s}_no_fill.png'
 
     # plot lines and points:
     voronoi_plot_2d(vor, ax=ax, show_vertices=False, line_colors='orange',
-                    line_width=2, line_alpha=0.6, point_size=8,
-                    figsize=(8, 8), dpi=220)
+                    line_width=2, line_alpha=0.8, point_size=10,
+                    figsize=(10, 8), dpi=300)
 
-    # Customize the colorbar
-    cbar = plt.colorbar(polygons, ax=ax)
-    cbar.set_label('Altitude (meter)')
+    # add station names
+    if  point_names is not None:
+        for i in range(len(point_names)):
+            ax.text(points[i, 0], points[i, 1]+0.01, point_names[i],
+                    horizontalalignment='center',
+                    verticalalignment='bottom',
+                    color='green',
+                    fontsize=8)
 
     # add axis labels:
     plt.xlabel('Longitude ($^\circ$E)', fontsize=12)
@@ -2616,11 +2635,11 @@ def plot_voronoi_diagram_reu(points: np.ndarray, fill_color: object, out_fig: st
     ax.set_ylim(-21.5, -20.8)
 
     ax.set_aspect('equal', adjustable='box')
-    ax.set_title('Voronoi Diagram with MF stations with ALT in color')
+    ax.set_title(title)
 
     # add coastline:
     coastline = load_reunion_coastline()
-    plt.scatter(coastline.longitude, coastline.latitude, marker='o', s=1, c='gray', edgecolor='gray', alpha=0.6)
+    plt.scatter(coastline.longitude, coastline.latitude, marker='o', s=1, c='gray', edgecolor='gray', alpha=0.4)
     plt.savefig(out_fig, dpi=300, bbox_inches='tight')
     plt.show()
 

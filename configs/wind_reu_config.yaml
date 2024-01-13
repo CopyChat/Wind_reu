@@ -16,14 +16,15 @@ data:
   mf_all: './local_data/MF/ff.dd.hourly.mf.2000-2020.csv'
 
 job:
-  voronoi: 0
+  voronoi: 1
   missing_MF: 0
   climatology: 1
 
 figure:
-    reunion_voronoi_mf_alt: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/voronoi_reu_mf_alt.png
-    reunion_voronoi_mf_speed: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/voronoi_reu_mf_speed.png
-    reunion_missing_mf: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/missing_mf
+  reunion_voronoi_mf: ./plot/voronoi_reu_mf.png
+  reunion_voronoi_mf_alt: ./plot/voronoi_reu_mf_alt.png
+  reunion_voronoi_mf_speed: ./plot/voronoi_reu_mf_speed.png
+  reunion_missing_mf: ./plot/missing_mf
 
 param:
   HUB_HEIGHT: 100

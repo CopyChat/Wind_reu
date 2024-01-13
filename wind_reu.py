@@ -34,17 +34,24 @@ def wind_resource(cfg: DictConfig) -> None:
     if cfg.job.voronoi:
         # load station data
         coords = np.array(station[['LON', 'LAT']])
+        station_names = list(station['NOM'])
 
+        # voronoi plot:
+        GEO_PLOT.plot_voronoi_diagram_reu(
+            points=coords[:], point_names=station_names, fill_color=None, out_fig=cfg.figure.reunion_voronoi_mf)
+
+        # voronoi with color in alt
         alt = np.array(station['ALT'])
         GEO_PLOT.plot_voronoi_diagram_reu(
-            points=coords[:], fill_color=alt, out_fig=cfg.figure.reunion_voronoi_mf_alt)
+            points=coords[:], point_names=None, fill_color=alt, fill_color_name='altitude (m)', out_fig=cfg.figure.reunion_voronoi_mf_alt)
 
         # get mean of all hourly data
         hourly_mean = mf.groupby('NOM').mean()
 
+        # voronoi with color in mean wind speed
         speed = hourly_mean['FF']
         GEO_PLOT.plot_voronoi_diagram_reu(
-            points=coords[:], fill_color=speed, out_fig=cfg.figure.reunion_voronoi_mf_speed)
+            points=coords[:], point_names=None, fill_color=speed, fill_color_name='mean wind speed (m/s)', out_fig=cfg.figure.reunion_voronoi_mf_speed)
 
     if cfg.job.missing_MF:
         print('working on MF missing data')
