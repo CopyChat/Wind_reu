@@ -16,9 +16,9 @@ data:
   mf_all: './local_data/MF/ff.dd.hourly.mf.2000-2020.csv'
 
 job:
-  missing_MF: 1
-  # used only in DATA
-  voronoi: 1
+  voronoi: 0
+  missing_MF: 0
+  climatology: 1
 
 figure:
     reunion_voronoi_mf_alt: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/voronoi_reu_mf_alt.png
@@ -26,22 +26,11 @@ figure:
     reunion_missing_mf: /Users/ctang/Microsoft_OneDrive/OneDrive/CODE/Wind_reu/plot/missing_mf
 
 param:
-  sarah_e_end_year: 2016
   HUB_HEIGHT: 100
 
 input:
   ssr_clusters: ./dataset/classifications__2_to_20_Cl.csv
 
-
-plot:
-  output_param: 0
-  wind_change_min: -2
-  wind_change_max: 2
-  cyclone_class: 'cyclone_class.csv'
-
-output:
-  plot:
-    mf_data_missing: 'missing_check_mf.png'
 
 
 

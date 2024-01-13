@@ -27,39 +27,43 @@ def wind_resource(cfg: DictConfig) -> None:
     over la reunion island
     """
 
-    # calculate necessary data and save it for analysis:
+    # reading data:
+    mf: pd.DataFrame = GEO_PLOT.read_csv_into_df_with_header(f'{cfg.data.mf_all:s}')
+    station: pd.DataFrame = pd.read_csv(f'{cfg.data.mf_station:s}')
 
-    if any(GEO_PLOT.get_values_multilevel_dict(dict(cfg.job))):
+    if cfg.job.voronoi:
+        # load station data
+        coords = np.array(station[['LON', 'LAT']])
+
+        alt = np.array(station['ALT'])
+        GEO_PLOT.plot_voronoi_diagram_reu(
+            points=coords[:], fill_color=alt, out_fig=cfg.figure.reunion_voronoi_mf_alt)
 
         # get mean of all hourly data
-        mf: pd.DataFrame = GEO_PLOT.read_csv_into_df_with_header(f'{cfg.data.mf_all:s}')
+        hourly_mean = mf.groupby('NOM').mean()
 
-        if cfg.job.voronoi:
-            # read station data
-            station = pd.read_csv(f'{cfg.data.mf_station:s}')
+        speed = hourly_mean['FF']
+        GEO_PLOT.plot_voronoi_diagram_reu(
+            points=coords[:], fill_color=speed, out_fig=cfg.figure.reunion_voronoi_mf_speed)
 
-            coords = np.array(station[['LON', 'LAT']])
+    if cfg.job.missing_MF:
+        print('working on MF missing data')
 
-            alt = np.array(station['ALT'])
-            GEO_PLOT.plot_voronoi_diagram_reu(
-                points=coords[:], fill_color=alt, out_fig=cfg.figure.reunion_voronoi_mf_alt)
+        for sta in station['NOM']:
+            print(f'{sta:s}')
+            sta1 = pd.DataFrame(mf[mf['NOM']==sta]['FF'])
+            GEO_PLOT.check_missing_da_df(
+                start='2000-01-01 00:00', end='2020-12-31 23:00',freq='H',
+                data=sta1, plot=True, relative=True, output_plot_tag=f'MF station_{sta:s}')
 
-            # get mean of all hourly data
-            hourly_mean = mf.groupby('NOM').mean()
+    if cfg.job.climatology:
+        print('working on climatology')
 
-            speed = hourly_mean['FF']
-            GEO_PLOT.plot_voronoi_diagram_reu(
-                points=coords[:], fill_color=speed, out_fig=cfg.figure.reunion_voronoi_mf_speed)
+        for sta in station['NOM']:
+            print(f'{sta:s}')
+            sta1 = pd.DataFrame(mf[mf['NOM']==sta]['FF'])
+            print(len(sta))
 
-        if cfg.job.missing_MF:
-            print('working on MF missing data')
-
-            for sta in station['NOM']:
-                print(f'{sta:s}')
-                sta1 = pd.DataFrame(mf[mf['NOM']==sta]['FF'])
-                GEO_PLOT.check_missing_da_df(
-                    start='2000-01-01 00:00', end='2020-12-31 23:00',freq='H',
-                    data=sta1, plot=True, relative=True, output_plot_tag=f'MF station_{sta:s}')
 
 
 
