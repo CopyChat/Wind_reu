@@ -493,6 +493,66 @@ def plot_wrf_domain(num_dom: int, domain_dir: str):
     return fig
 
 
+def plot_station_value_reu(lon: pd.DataFrame, lat: pd.DataFrame,
+                           station_name: list,
+                           vmin: float, vmax: float, value: np.array, cbar_label: str,
+                           fig_title: str = None, output_fig: str = None,bias=False):
+    """
+    plot station locations and their values
+    :param bias:
+    :type bias:
+    :param fig_title:
+    :param cbar_label: label of color bar
+    :param lon:
+    :param lat:
+    :param value:
+    :return: map show
+    """
+    import matplotlib as mpl
+
+
+    if bias:
+        cmap = plt.cm.coolwarm
+        vmin = max(np.abs(vmin), np.abs(vmax)) * (- 1)
+        vmax = max(np.abs(vmin), np.abs(vmax))
+    else:
+        cmap = plt.cm.YlOrRd
+
+    fig, ax = plt.subplots(figsize=(10, 8), dpi=300)
+    # ----------------------------- stations -----------------------------
+    sc = plt.scatter(lon, lat, c=value, edgecolor='black',
+                     zorder=2, vmin=vmin, vmax=vmax, s=1500, cmap=cmap)
+
+    # ----------------------------- color bar -----------------------------
+    cb = plt.colorbar(sc, orientation='vertical', shrink=0.7, pad=0.05, label=cbar_label)
+    cb.ax.tick_params(labelsize=10)
+
+    # add coastline:
+    coastline = load_reunion_coastline()
+    plt.scatter(coastline.longitude, coastline.latitude, marker='o', s=1, c='gray', edgecolor='gray', alpha=0.4)
+
+    # add station names:
+    if station_name is not None:
+        for i in range(len(station_name)):
+            ax.text(lon[i], lat[i] + 0.01, station_name[i],
+                    horizontalalignment='center',
+                    verticalalignment='bottom',
+                    color='green',
+                    fontsize=8)
+
+    ax.set_xlim(55.15, 55.9)
+    ax.set_ylim(-21.5, -20.8)
+    ax.set_aspect('equal', adjustable='box')
+
+    if fig_title is not None:
+        plt.title(fig_title, fontsize=12, fontweight='bold')
+
+    if output_fig is not None:
+        plt.savefig(output_fig, dpi=300,)
+
+    plt.show()
+    print(f'got plot')
+
 # noinspection PyUnresolvedReferences
 def plot_station_value(lon: pd.DataFrame, lat: pd.DataFrame, value: np.array, cbar_label: str,
                        fig_title: str, bias=False):
@@ -548,7 +608,7 @@ def plot_station_value(lon: pd.DataFrame, lat: pd.DataFrame, value: np.array, cb
     # ----------------------------------------------------------
     sc = plt.scatter(lon, lat, c=value, edgecolor='black',
                      # transform=ccrs.PlateCarree(),
-                     zorder=2, norm=norm, vmin=vmin, vmax=vmax, s=50, cmap=cmap)
+                     zorder=2, norm=norm, s=50, cmap=cmap)
 
     # ----------------------------- color bar -----------------------------
     cb = plt.colorbar(sc, orientation='horizontal', shrink=0.7, pad=0.05, label=cbar_label)

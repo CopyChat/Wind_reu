@@ -63,6 +63,20 @@ def wind_resource(cfg: DictConfig) -> None:
                 start='2000-01-01 00:00', end='2020-12-31 23:00',freq='H',
                 data=sta1, plot=True, relative=True, output_plot_tag=f'MF station_{sta:s}')
 
+    if cfg.job.multi_year_mean:
+
+        speed_mean = pd.DataFrame(mf.groupby('NOM').mean()[['FF', 'ALT', 'LON', 'LAT']])
+        GEO_PLOT.plot_station_value_reu(lon=speed_mean.LON, lat=speed_mean.LAT, vmin=1, vmax=6,
+                                        station_name=station['NOM'], output_fig=cfg.figure.station_mean_ff,
+                                        value=speed_mean.FF, cbar_label='mean hourly wind speed (m/s)',
+                                        fig_title=f'2000-2020 hourly mean at MF stations')
+
+        std_ff = pd.DataFrame(mf.groupby('NOM').std()[['FF', 'ALT', 'LON', 'LAT']])
+        GEO_PLOT.plot_station_value_reu(lon=speed_mean.LON, lat=speed_mean.LAT, vmin=1, vmax=3,
+                                        station_name=station['NOM'], output_fig=cfg.figure.station_std_ff,
+                                        value=std_ff.FF, cbar_label='std of hourly wind speed ',
+                                        fig_title=f'2000-2020 hourly mean at MF stations')
+
     if cfg.job.climatology:
         print('working on climatology')
 

@@ -18,13 +18,17 @@ data:
 job:
   voronoi: 0
   missing_MF: 0
-  climatology: 1
+  multi_year_mean: 0
+  climatology: 0
+  MF_station_clustering: 1
 
 figure:
   reunion_voronoi_mf: ./plot/voronoi_reu_mf.png
   reunion_voronoi_mf_alt: ./plot/voronoi_reu_mf_alt.png
   reunion_voronoi_mf_speed: ./plot/voronoi_reu_mf_speed.png
   reunion_missing_mf: ./plot/missing_mf
+  station_mean_ff: ./plot/station_mean_ff.png
+  station_std_ff: ./plot/station_std_ff.png
 
 param:
   HUB_HEIGHT: 100
