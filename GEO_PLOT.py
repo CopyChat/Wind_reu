@@ -2698,12 +2698,20 @@ def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str
     ax.set_title(title)
 
     # add coastline:
-    coastline = load_reunion_coastline()
-    plt.scatter(coastline.longitude, coastline.latitude, marker='o', s=1, c='gray', edgecolor='gray', alpha=0.4)
+    plot_coastline_reu()
+
     plt.savefig(out_fig, dpi=300, bbox_inches='tight')
     plt.show()
 
     return fig
+
+
+def plot_coastline_reu():
+
+    coastline = load_reunion_coastline()
+    plt.scatter(coastline.longitude, coastline.latitude, marker='o', s=1, c='gray', edgecolor='gray', alpha=0.4)
+
+    return 1
 
 
 # =====
