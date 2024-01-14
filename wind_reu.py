@@ -66,6 +66,7 @@ def wind_resource(cfg: DictConfig) -> None:
     if cfg.job.climatology:
         print('working on climatology')
 
+        # climatology vs data completeness:
         for sta in station['NOM']:
             print(f'{sta:s}')
             sta1 = pd.DataFrame(mf[mf['NOM']==sta]['FF'])
@@ -74,6 +75,13 @@ def wind_resource(cfg: DictConfig) -> None:
                 df=sta1, columns=['FF',], title=f'{sta:s} wind speed 2000-2022', tag_on_plot=f'{sta:s}',
                 linestyles=None, output_tag=f'{sta:s}', ylabel=f'hourly wind speed', with_marker=True,
                 plot_errorbar=True, vmin=0, vmax=10)
+
+        # climatology between stations:
+        mf_pivot = mf.pivot(columns='NOM', values='FF')
+        GEO_PLOT.plot_annual_diurnal_cycle_columns_in_df(
+            df=mf_pivot, columns=station['NOM'], title='climatology between stations', tag_on_plot='',
+            linestyles=None, output_tag='all stations', ylabel=f'hourly wind speed', with_marker=True,
+            plot_errorbar=True, vmin=0, vmax=10)
 
 
 
