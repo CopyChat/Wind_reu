@@ -4387,6 +4387,9 @@ def plot_annual_diurnal_cycle_columns_in_df(df: pd.DataFrame, columns=None,
     :return:
     """
 
+    # note: to convert df to multiple columns based on the values in one column.
+    # use this line:
+    # mf_pivot = mf.pivot(columns='NOM', values='FF')
     # ----------------------------- set parameters -----------------------------
 
     if columns is not None:
@@ -4400,13 +4403,13 @@ def plot_annual_diurnal_cycle_columns_in_df(df: pd.DataFrame, columns=None,
     # ----------------------------------- color and markers ------------------------------
     if colors is None:
         colors = ['lightgrey', 'gray', 'lightcoral', 'firebrick', 'red', 'darkorange', 'gold', 'yellowgreen',
-                  'green', 'cyan', 'deepskyblue', 'blue', 'darkviolet', 'magenta', 'pink']
+                  'green', 'cyan', 'deepskyblue', 'blue', 'darkviolet', 'magenta', 'pink'] * 4
 
         if len(columns) < 5:
             colors = ['blue', 'red', 'green', 'black']
 
     if markers is None:
-        markers = ['o', 'v', '^', '<', '1', 's', 'p', 'P', '*', '+', 'x', 'd', 'D']
+        markers = ['o', 'v', '^', '<', '1', 's', 'p', 'P', '*', '+', 'x', 'd', 'D'] * 4
         if len(columns) < 5:
             markers = ['o', 'v', 's', '*', '+', 'x', 'd', 'D']
     # ----------------------------- set fig -----------------------------
