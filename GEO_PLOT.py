@@ -493,6 +493,74 @@ def plot_wrf_domain(num_dom: int, domain_dir: str):
     return fig
 
 
+def plot_MF_station_names(lon: list, lat: list, station_name: list):
+    for i in range(len(station_name)):
+        plt.text(lon[i], lat[i] + 0.01, station_name[i], horizontalalignment = 'center',
+                 verticalalignment = 'bottom', color = 'green', fontsize = 8)
+
+
+def clustering_station_climatology_reu(lon, lat, station_name,
+                                       climatology: np.array, eps=1, min_samples=2,
+                                       title='Clustering_station_climatology',
+                                       show_params = False,
+                                       out_fig='./plot/DBSCAN_clustering.png'):
+    """
+
+    eps = 3  # The maximum dist. between two samples for one to be considered as in the neighborhood of the other
+    min_samples = 2  # number of samples (or total weight) in a neighborhood for a point
+
+    """
+
+    from sklearn.metrics.pairwise import pairwise_distances
+    from sklearn.cluster import DBSCAN
+
+    X = climatology
+
+    # Calculate pairwise distances
+    distances = pairwise_distances(X)
+
+    data_info = f'mean_dist.={distances.mean():2.1f}\n' \
+                f'median_dist.={np.median(distances):2.1f}\n' \
+                f'max_dist.={distances.max():2.1f}'
+
+
+    # Use DBSCAN for clustering
+    eps = 3  # The maximum dist. between two samples for one to be considered as in the neighborhood of the other
+    min_samples = 2  # number of samples (or total weight) in a neighborhood for a point
+    # to be considered as a core point
+    dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric='euclidean')
+    cluster_labels = dbscan.fit_predict(X)
+
+    print(cluster_labels)
+
+    # Visualize the clusters
+    fig, ax = plt.subplots(figsize=(8, 6), dpi=300)
+
+    plt.scatter(lon, lat, c=cluster_labels, cmap='viridis', s=500)
+
+    if title is not None:
+        plt.title(title, fontsize=12, fontweight='bold')
+    else:
+        plt.title('DBSCAN Clustering, MF annual+diurnal climatology, 2000-2020')
+
+    plt.xlabel('LON')
+    plt.ylabel('LAT')
+
+    plot_coastline_reu()
+
+    plot_MF_station_names(lon=lon, lat=lat, station_name=station_name)
+
+    if show_params:
+        plt.text(0.98, 0.98, f'eps={eps:2.1f}\n min_sample={min_samples:g}\n\n'
+                             f'{data_info:s}',fontsize=8, color='red',
+                 horizontalalignment='right', verticalalignment='top', transform=ax.transAxes)
+
+    plt.savefig(out_fig, dpi=300)
+    plt.show()
+
+    return cluster_labels, distances
+
+
 def plot_station_value_reu(lon: pd.DataFrame, lat: pd.DataFrame,
                            station_name: list,
                            vmin: float, vmax: float, value: np.array, cbar_label: str,

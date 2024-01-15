@@ -25,10 +25,11 @@ job:
 figure:
   reunion_voronoi_mf: ./plot/voronoi_reu_mf.png
   reunion_voronoi_mf_alt: ./plot/voronoi_reu_mf_alt.png
-  reunion_voronoi_mf_speed: ./plot/voronoi_reu_mf_speed.png
+  reunion_voronoi_mf_speed_10m: ./plot/voronoi_reu_mf_speed_10m.png
   reunion_missing_mf: ./plot/missing_mf
-  station_mean_ff: ./plot/station_mean_ff.png
-  station_std_ff: ./plot/station_std_ff.png
+  station_mean_ff_10m: ./plot/station_mean_ff_10m.png
+  station_std_ff_10m: ./plot/station_std_ff_10m.png
+  DBSCAN_cluster_climatology_MF_ff_10m: ./plot/DBSCAN_cluster_climatology_MF_ff_10m.png
 
 param:
   HUB_HEIGHT: 100
