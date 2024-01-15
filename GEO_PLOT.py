@@ -31,6 +31,7 @@ import cartopy.feature as cfeature
 from scipy import stats
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from statsmodels.stats.multitest import fdrcorrection as fdr_cor
+import matplotlib.colors as mcolors
 
 
 def fig_add_headers(
@@ -525,8 +526,10 @@ def clustering_station_climatology_reu(lon, lat, station_name,
 
 
     # Use DBSCAN for clustering
-    eps = 3  # The maximum dist. between two samples for one to be considered as in the neighborhood of the other
-    min_samples = 2  # number of samples (or total weight) in a neighborhood for a point
+    # params:
+    # eps = 3  # The maximum dist. between two samples for one to be considered as in the neighborhood of the other
+    # min_samples = 2  # number of samples (or total weight) in a neighborhood for a point
+
     # to be considered as a core point
     dbscan = DBSCAN(eps=eps, min_samples=min_samples, metric='euclidean')
     cluster_labels = dbscan.fit_predict(X)
@@ -2680,33 +2683,117 @@ def plot_field_in_classif(field: xr.DataArray, classif: pd.DataFrame,
     plt.show()
     print(f'got plot')
 
-def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str, fill_color=None,
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+
+def plot_all_cmaps():
+    N_ROWS, N_COLS = 13, 14
+    HEIGHT, WIDTH = 8, 14
+
+    cmap_ids = plt.colormaps()
+    n_cmaps = len(cmap_ids)
+
+    print(f'mpl version: {mpl.__version__},\nnumber of cmaps: {n_cmaps}')
+
+    index = 0
+    while index < n_cmaps:
+        fig, axes = plt.subplots(N_ROWS, N_COLS, figsize=(WIDTH, HEIGHT))
+        for row in range(N_ROWS):
+            for col in range(N_COLS):
+                ax = axes[row, col]
+                cmap_id = cmap_ids[index]
+                cmap = plt.get_cmap(cmap_id)
+                mpl.colorbar.ColorbarBase(ax, cmap=cmap,
+                                          orientation='horizontal')
+                ax.set_title(f"'{cmap_id}', {index}", fontsize=8)
+                ax.tick_params(left=False, right=False, labelleft=False,
+                               labelbottom=False, bottom=False)
+
+                last_iteration = index == n_cmaps - 1
+                if (row == N_ROWS - 1 and col == N_COLS - 1) or last_iteration:
+                    plt.tight_layout()
+                    # plt.savefig('colormaps'+str(index)+'.png')
+                    plt.show()
+                    if last_iteration: return
+                index += 1
+
+
+
+def plot_colortable(colors=mcolors.CSS4_COLORS, *, ncols=4, sort_colors=True):
+
+    import math
+    from matplotlib.patches import Rectangle
+
+    cell_width = 212
+    cell_height = 22
+    swatch_width = 48
+    margin = 12
+
+    # Sort colors by hue, saturation, value and name.
+    if sort_colors is True:
+        names = sorted(
+            colors, key=lambda c: tuple(mcolors.rgb_to_hsv(mcolors.to_rgb(c))))
+    else:
+        names = list(colors)
+
+    n = len(names)
+    nrows = math.ceil(n / ncols)
+
+    width = cell_width * ncols + 2 * margin
+    height = cell_height * nrows + 2 * margin
+    dpi = 72
+
+    fig, ax = plt.subplots(figsize=(width / dpi, height / dpi), dpi=dpi)
+    fig.subplots_adjust(margin/width, margin/height,
+                        (width-margin)/width, (height-margin)/height)
+    ax.set_xlim(0, cell_width * ncols)
+    ax.set_ylim(cell_height * (nrows-0.5), -cell_height/2.)
+    ax.yaxis.set_visible(False)
+    ax.xaxis.set_visible(False)
+    ax.set_axis_off()
+
+    for i, name in enumerate(names):
+        row = i % nrows
+        col = i // nrows
+        y = row * cell_height
+
+        swatch_start_x = cell_width * col
+        text_pos_x = cell_width * col + swatch_width + 7
+
+        ax.text(text_pos_x, y, name, fontsize=14,
+                horizontalalignment='left',
+                verticalalignment='center')
+
+        ax.add_patch(
+            Rectangle(xy=(swatch_start_x, y-9), width=swatch_width,
+                      height=18, facecolor=colors[name], edgecolor='0.7')
+        )
+
+    plt.show()
+    return fig
+
+
+def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str,
+                             fill_color=None, fill_infinite_cells=True, cmap='Blurs_r',
                              fill_color_name:str='') -> object:
 
     from matplotlib.collections import PolyCollection
     from scipy.spatial import Voronoi, voronoi_plot_2d
 
-    # add distant points to fill the infinite regions: do NOT works, distorted.
-    # distant_point = 99999
-    # points = np.append(points, [[distant_point, distant_point], [-distant_point, distant_point],
-    #                             [distant_point, -distant_point], [-distant_point, -distant_point]], axis=0)
+    if fill_infinite_cells:
+        # add distant points to fill the infinite regions: do NOT use very large values,
+        # otherwise the diagram will be distorted.
+        distant_point = 99
+        points = np.append(points, [[distant_point, distant_point], [-distant_point, distant_point],
+                                    [distant_point, -distant_point], [-distant_point, -distant_point]], axis=0)
 
-    vor = Voronoi(points, furthest_site=False)
+    vor = Voronoi(points, furthest_site=False, qhull_options='Qbb Qc Qz')
 
     def voronoi_finite(vor):
         """
         Reconstruct infinite Voronoi regions in a finite space.
-
-        Parameters:
-        vor : scipy.spatial.Voronoi
-            Voronoi diagram object.
-
-        Returns:
-        regions : list of list of tuple
-            List of finite Voronoi regions.
-        vertices : array
-            Voronoi diagram vertices.
-            :type vor: object
         """
         new_regions = []
         for region in vor.regions:
@@ -2724,12 +2811,12 @@ def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str
     if fill_color is not None:
 
         regions, vertices = voronoi_finite(vor)
-        polygons = PolyCollection(regions, edgecolor='black', cmap='viridis')
+        polygons = PolyCollection(regions, edgecolor='black', cmap=plt.cm.get_cmap(cmap, 11))
         polygons.set_array(fill_color)
         ax.add_collection(polygons)
 
         # Customize the colorbar
-        cbar = plt.colorbar(polygons, ax=ax)
+        cbar = plt.colorbar(polygons, ax=ax, orientation='vertical', shrink=0.8, pad=0.05)
         cbar.set_label(fill_color_name)
 
         title = f'{title:s} {fill_color_name:s}'
@@ -2748,7 +2835,7 @@ def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str
             ax.text(points[i, 0], points[i, 1]+0.01, point_names[i],
                     horizontalalignment='center',
                     verticalalignment='bottom',
-                    color='green',
+                    color='purple',
                     fontsize=8)
 
     # add axis labels:

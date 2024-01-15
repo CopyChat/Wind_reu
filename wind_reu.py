@@ -46,8 +46,8 @@ def wind_resource(cfg: DictConfig) -> None:
         # voronoi with color in alt
         alt = np.array(station['ALT'])
         GEO_PLOT.plot_voronoi_diagram_reu(
-            points=coords[:], point_names=None, fill_color=alt, fill_color_name='altitude (m)',
-            out_fig=cfg.figure.reunion_voronoi_mf_alt)
+            points=coords[:], point_names=station_names, fill_color=alt, fill_color_name='altitude (m)',
+            cmap='Blues_r', out_fig=cfg.figure.reunion_voronoi_mf_alt)
 
         # get mean of all hourly data
         hourly_mean = mf.groupby('NOM').mean()
@@ -55,8 +55,8 @@ def wind_resource(cfg: DictConfig) -> None:
         # voronoi with color in mean wind speed
         speed = hourly_mean['FF']
         GEO_PLOT.plot_voronoi_diagram_reu(
-            points=coords[:], point_names=None, fill_color=speed, fill_color_name='10m mean hourly wind speed (m/s)',
-            out_fig=cfg.figure.reunion_voronoi_mf_speed_10m)
+            points=coords[:], point_names=station_names, fill_color=speed, fill_color_name='10m mean hourly wind speed (m/s)',
+            cmap='Greens_r', out_fig=cfg.figure.reunion_voronoi_mf_speed_10m)
 
     if cfg.job.missing_MF:
         print('working on MF missing data')
@@ -118,7 +118,7 @@ def wind_resource(cfg: DictConfig) -> None:
 
         cluster_labels, distances = GEO_PLOT.clustering_station_climatology_reu(
             lon=station.LON, lat=station.LAT,station_name=station.NOM, climatology=climatology,
-            eps=3, min_samples=2, title='DBSCAN_clustering of hourly wind speed (m/s) \n annual + diurnal cycle 2000-2020 @ 10m',
+            eps=4, min_samples=2, title='DBSCAN_clustering of hourly wind speed (m/s) \n annual + diurnal cycle 2000-2020 @ 10m',
             out_fig=cfg.figure.DBSCAN_cluster_climatology_MF_ff_10m, show_params=True)
 
 
