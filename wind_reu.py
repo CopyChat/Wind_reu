@@ -131,6 +131,7 @@ def wind_resource(cfg: DictConfig) -> None:
             out_fig=cfg.figure.DBSCAN_cluster_climatology_MF_ff_10m[:-4]+' in_voronoi.png')
 
 
+
     print(f'work done')
 if __name__ == "__main__":
     sys.exit(wind_resource())
