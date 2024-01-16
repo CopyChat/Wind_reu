@@ -8,11 +8,11 @@ __author__ = "ChaoTANG@univ-reunion.fr"
 import sys
 import hydra
 import numpy as np
+import time
 import pandas as pd
 from importlib import reload
 from omegaconf import DictConfig
 import GEO_PLOT
-
 
 def jk():
     print(f'reloading GEO_PLOT....')
@@ -20,20 +20,24 @@ def jk():
 
 # ----------------------------- functions -----------------------------
 
-
-
 @hydra.main(version_base='1.3', config_path="configs", config_name="wind_reu_config")
 def wind_resource(cfg: DictConfig) -> None:
     """
-    to find the physical link between the SSR classification and the large-scale variability
-    over la reunion island
+    Parameters
+    ----------
+    cfg: DictConfig
+        Configuration object containing various parameters for the method.
+
     """
+
+    start_time = time.time()  # start timing
 
     import matplotlib.pyplot as plt
 
     # reading data:
     mf: pd.DataFrame = GEO_PLOT.read_csv_into_df_with_header(f'{cfg.data.mf_all:s}')
     station: pd.DataFrame = pd.read_csv(f'{cfg.data.mf_station:s}')
+
 
     if cfg.job.voronoi:
 
@@ -131,7 +135,10 @@ def wind_resource(cfg: DictConfig) -> None:
             out_fig=cfg.figure.DBSCAN_cluster_climatology_MF_ff_10m[:-4]+' in_voronoi.png')
 
 
-
     print(f'work done')
+
+    end_time = time.time()
+    print(f'Time elapsed: {end_time - start_time} seconds')
+
 if __name__ == "__main__":
     sys.exit(wind_resource())
