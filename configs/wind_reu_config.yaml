@@ -16,7 +16,7 @@ data:
   mf_all: './local_data/MF/ff.dd.hourly.mf.2000-2020.csv'
 
 job:
-  voronoi: 0
+  voronoi: 1
   missing_MF: 0
   multi_year_mean: 0
   climatology: 0

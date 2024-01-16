@@ -2775,68 +2775,97 @@ def plot_colortable(colors=mcolors.CSS4_COLORS, *, ncols=4, sort_colors=True):
     return fig
 
 
-def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str,
-                             fill_color=None, fill_infinite_cells=True, cmap='Blurs_r',
+def plot_voronoi_diagram_reu(points: np.ndarray, point_names: pd.DataFrame, out_fig: str,
+                             fill_color: pd.Series=None, show_color=False, show_values_in_region=True,
+                             additional_value_in_region: pd.Series=None, fill_infinite_cells=True, cmap=plt.cm.get_cmap('Blues_r', 11),
                              fill_color_name:str='') -> object:
+    """
+    cmap : example: plt.cm.get_cmap('Blues_r', 11) # number of discrete colors
+    fill_color and point_names has to be pd.Series
+    """
 
     from matplotlib.collections import PolyCollection
     from scipy.spatial import Voronoi, voronoi_plot_2d
+    from shapely.geometry import Point
+    from shapely.geometry.polygon import Polygon
+
+    # convert all fill_color to pd.DataFrame
+    fill_color = pd.Series(fill_color)
 
     if fill_infinite_cells:
         # add distant points to fill the infinite regions: do NOT use very large values,
         # otherwise the diagram will be distorted.
         distant_point = 99
-        points = np.append(points, [[distant_point, distant_point], [-distant_point, distant_point],
-                                    [distant_point, -distant_point], [-distant_point, -distant_point]], axis=0)
+        points = pd.DataFrame(np.append(points, [[distant_point, distant_point], [-distant_point, distant_point],
+                                                 [distant_point, -distant_point], [-distant_point, -distant_point]],
+                                        axis=0), columns=points.columns)
 
+    # calculate voronoi coordinates
     vor = Voronoi(points, furthest_site=False, qhull_options='Qbb Qc Qz')
 
-    def voronoi_finite(vor):
-        """
-        Reconstruct infinite Voronoi regions in a finite space.
-        """
-        new_regions = []
-        for region in vor.regions:
-            if -1 not in region and len(region) > 0:
-                new_regions.append([(vor.vertices[i, 0], vor.vertices[i, 1]) for i in region])
-        return new_regions, vor.vertices
-
-    # ---------------------------------------
-
+    # plot the voronoi regions
     fig, ax = plt.subplots(figsize=(10, 8))
-
     title = 'Voronoi Diagram with MF stations'
-    # Plot Voronoi diagram with filled color
+
+    # plot lines and points:
+    voronoi_plot_2d(vor, ax=ax, show_vertices=False,
+                    line_colors='orange', line_width=2, line_alpha=0.8,
+                    point_size=10, point_color='blue', point_alpha=0.9,
+                    figsize=(10, 8), dpi=300)
+
+    # get all finite regions,
+    # if fill_infinite_region is True, then infinite regions are included here
+    finite_regions = []
+    vor_regions = []
+    for region in vor.regions:
+        if -1 not in region and len(region) > 0:
+            finite_regions.append([(vor.vertices[i, 0], vor.vertices[i, 1]) for i in region])
+            vor_regions.append(region)
+
+    # correct regions orders, which has been changed in 5 above lines
+    color_finite_cell = []
+    for gon in vor_regions:
+        xy = vor.vertices[gon] # get lon/lat from vertices index, index of vor.vertices.
+        # find the point in this region:
+        station_in_region: str = [point_names[i] for i in range(len(point_names)) if
+                                  Polygon(xy).contains(Point(points.iloc[i]))][0]
+        color_finite_cell.append(fill_color.iloc[point_names.loc[point_names == station_in_region].index].values[0])
+        # fill_color and point_names has to be pd.DataFrame or pd.Series
 
     if fill_color is not None:
 
-        regions, vertices = voronoi_finite(vor)
-        polygons = PolyCollection(regions, edgecolor='black', cmap=plt.cm.get_cmap(cmap, 11))
-        polygons.set_array(fill_color)
-        ax.add_collection(polygons)
-
-        # Customize the colorbar
-        cbar = plt.colorbar(polygons, ax=ax, orientation='vertical', shrink=0.8, pad=0.05)
-        cbar.set_label(fill_color_name)
-
         title = f'{title:s} {fill_color_name:s}'
 
+        if show_color:
+            regions = finite_regions
+            print(len(regions), 'num of regions')
+            polygons = PolyCollection(regions, edgecolor='black', cmap=cmap)
+            polygons.set_array(color_finite_cell)
+            ax.add_collection(polygons)
+
+            # Customize the colorbar
+            cbar = plt.colorbar(polygons, ax=ax, orientation='vertical', shrink=0.8, pad=0.05)
+            cbar.set_label(fill_color_name)
+
+        if show_values_in_region:
+            if additional_value_in_region is not None:
+                value_to_show = additional_value_in_region
+            else:
+                value_to_show = fill_color
+
+            for i in range(len(fill_color)):
+                ax.text(points.LON[i]+0.01, points.LAT[i], f'{value_to_show[i]:2.1f}',
+                        horizontalalignment='left', verticalalignment='center',
+                        color='black', fontsize=9)
     else:
         out_fig = f'{out_fig[:-4]:s}_no_fill.png'
-
-    # plot lines and points:
-    voronoi_plot_2d(vor, ax=ax, show_vertices=False, line_colors='orange',
-                    line_width=2, line_alpha=0.8, point_size=10,
-                    figsize=(10, 8), dpi=300)
 
     # add station names
     if  point_names is not None:
         for i in range(len(point_names)):
-            ax.text(points[i, 0], points[i, 1]+0.01, point_names[i],
-                    horizontalalignment='center',
-                    verticalalignment='bottom',
-                    color='purple',
-                    fontsize=8)
+            ax.text(points.LON[i], points.LAT[i]+0.01, point_names[i],
+                    horizontalalignment='center', verticalalignment='bottom',
+                    color='purple', fontsize=8)
 
     # add axis labels:
     plt.xlabel('Longitude ($^\circ$E)', fontsize=12)
@@ -2858,7 +2887,7 @@ def plot_voronoi_diagram_reu(points: np.ndarray, point_names: list, out_fig: str
     plt.savefig(out_fig, dpi=300, bbox_inches='tight')
     plt.show()
 
-    return fig
+    return vor
 
 
 def plot_coastline_reu():

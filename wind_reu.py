@@ -7,7 +7,6 @@ __author__ = "ChaoTANG@univ-reunion.fr"
 
 import sys
 import hydra
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from importlib import reload
@@ -30,37 +29,36 @@ def wind_resource(cfg: DictConfig) -> None:
     over la reunion island
     """
 
+    import matplotlib.pyplot as plt
+
     # reading data:
     mf: pd.DataFrame = GEO_PLOT.read_csv_into_df_with_header(f'{cfg.data.mf_all:s}')
     station: pd.DataFrame = pd.read_csv(f'{cfg.data.mf_station:s}')
 
     if cfg.job.voronoi:
-        # load station data
-        coords = np.array(station[['LON', 'LAT']])
-        station_names = list(station['NOM'])
 
         # voronoi plot:
         GEO_PLOT.plot_voronoi_diagram_reu(
-            points=coords[:], point_names=station_names, fill_color=None, out_fig=cfg.figure.reunion_voronoi_mf)
+            fill_infinite_cells=False, show_color=False, show_values_in_region=True,
+            points=station[['LON', 'LAT']], point_names=station['NOM'], fill_color=station['ALT'],
+            fill_color_name='altitude (m)', out_fig=cfg.figure.reunion_voronoi_mf)
 
         # voronoi with color in alt
-        alt = np.array(station['ALT'])
         GEO_PLOT.plot_voronoi_diagram_reu(
-            points=coords[:], point_names=station_names, fill_color=alt, fill_color_name='altitude (m)',
-            cmap='Blues_r', out_fig=cfg.figure.reunion_voronoi_mf_alt)
-
-        # get mean of all hourly data
-        hourly_mean = mf.groupby('NOM').mean()
+            fill_infinite_cells=True, show_color=True, show_values_in_region=True,
+            points=station[['LON', 'LAT']], point_names=station['NOM'], fill_color=station['ALT'],
+            fill_color_name='altitude (m)', out_fig=cfg.figure.reunion_voronoi_mf_alt)
 
         # voronoi with color in mean wind speed
-        speed = hourly_mean['FF']
+        hourly_mean = mf.groupby('NOM').mean()
         GEO_PLOT.plot_voronoi_diagram_reu(
-            points=coords[:], point_names=station_names, fill_color=speed, fill_color_name='10m mean hourly wind speed (m/s)',
-            cmap='Greens_r', out_fig=cfg.figure.reunion_voronoi_mf_speed_10m)
+            fill_infinite_cells=True, show_color=True, show_values_in_region=True, cmap=plt.cm.get_cmap('Greens', 10),
+            points=station[['LON', 'LAT']], point_names=station['NOM'],
+            fill_color=hourly_mean['FF'], fill_color_name='10m mean hourly wind speed (m/s)',
+            out_fig=cfg.figure.reunion_voronoi_mf_speed_10m)
 
     if cfg.job.missing_MF:
         print('working on MF missing data')
-
         for sta in station['NOM']:
             print(f'{sta:s}')
             sta1 = pd.DataFrame(mf[mf['NOM']==sta]['FF'])
@@ -105,9 +103,10 @@ def wind_resource(cfg: DictConfig) -> None:
     if cfg.job.MF_station_clustering:
         print('working on MF station clustering')
 
+        # put stations into column
         mf_pivot = mf.pivot(columns='NOM', values='FF')
+
         # DBSCAN clustering on diurnal cycle + seasonal cycle
-        from sklearn.cluster import DBSCAN
         import matplotlib.pyplot as plt
 
         diurnal = mf_pivot.groupby(mf_pivot.index.hour).mean()
@@ -118,9 +117,18 @@ def wind_resource(cfg: DictConfig) -> None:
 
         cluster_labels, distances = GEO_PLOT.clustering_station_climatology_reu(
             lon=station.LON, lat=station.LAT,station_name=station.NOM, climatology=climatology,
-            eps=4, min_samples=2, title='DBSCAN_clustering of hourly wind speed (m/s) \n annual + diurnal cycle 2000-2020 @ 10m',
+            eps=4, min_samples=2, title='DBSCAN_clustering of hourly wind speed (m/s) \n '
+                                        'annual + diurnal cycle 2000-2020 @ 10m',
             out_fig=cfg.figure.DBSCAN_cluster_climatology_MF_ff_10m, show_params=True)
 
+        GEO_PLOT.plot_voronoi_diagram_reu(
+            fill_infinite_cells=True, show_color=True, show_values_in_region=True, cmap=plt.cm.get_cmap('summer', 3),
+            points=station[['LON', 'LAT']], point_names=station['NOM'], fill_color=pd.Series(cluster_labels),
+            additional_value_in_region=mf.groupby('NOM').mean()['FF'],
+            fill_color_name='DBSCAN_cluster_number on wind climatology \n '
+                            '(annual+diurnal mean of hourly wind speed at 10m) \n '
+                            'values shown on map = mean wind speed (m/s)',
+            out_fig=cfg.figure.DBSCAN_cluster_climatology_MF_ff_10m[:-4]+' in_voronoi.png')
 
 
     print(f'work done')
