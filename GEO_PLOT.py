@@ -918,7 +918,8 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
     # U, us microseconds
     # N nanoseconds
 
-    data = drop_nan_infinity(data)
+    if isinstance(data, pd.DataFrame):
+        data = drop_nan_infinity(data)
 
     print(f'start working ...')
 
@@ -1057,6 +1058,7 @@ def check_missing_da_df(start: str, end: str, freq: str, data: xr.DataArray, plo
         if show_fig:
             plt.show()
 
+    print(matrix_mon_hour)
     print(total_time_steps)
     return matrix_mon_hour
 
@@ -8674,6 +8676,20 @@ def get_coastline_from_topo_reu(plot: bool = True, csv:str ='~/local_data/topo/r
         plt.show()
 
     return df
+
+
+def calculate_wind_speed(u: xr.DataArray, v: xr.DataArray) -> xr.DataArray:
+    """
+    Calculate the magnitude of wind speed from its U and V components.
+    Parameters:
+    u (xr.DataArray): The u component of the wind speed.
+    v (xr.DataArray): The v component of the wind speed.
+    Returns:
+    xr.DataArray: The magnitude of the wind speed.
+    """
+    wind_speed = np.sqrt(u ** 2 + v ** 2)
+    speed = xr.DataArray(wind_speed).rename('wind_speed').assign_coords({'units': u.attrs['units']})
+    return speed
 
 
 def plot_topo_reunion_high_reso(plot: bool = True, grid: xr.DataArray = None,
